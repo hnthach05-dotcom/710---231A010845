@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bài tập 14 - Memory Card Game</title>
+  <style>
+    /* ===== RESET ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #0d6efd;
+    }
+
+    .info {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    /* ===== GRID LAYOUT ===== */
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      padding-top: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.flip .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .card-front {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .card-back {
+      background: #ffffff;
+      border: 2px solid #0d6efd;
+      transform: rotateY(180deg);
+    }
+
+    .card:hover .card-front {
+      background: #0b5ed7;
+    }
+
+    /* ===== BUTTON ===== */
+    .actions {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #0d6efd;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #0b5ed7;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .game-board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<main>
+  <h1>Memory Card Flip Game</h1>
+  <p class="info">Số lượt lật: <span id="moves">0</span></p>
+
+  <section class="game-board" id="gameBoard"></section>
+
+  <div class="actions">
+    <button onclick="resetGame()">Chơi lại</button>
+  </div>
+</main>
+
+<script>
+  const icons = ['🍎','🍌','🍇','🍓'];
+  let cards = [...icons, ...icons];
+  let firstCard = null;
+  let secondCard = null;
+  let lockBoard = false;
+  let moves = 0;
+  let matchedPairs = 0;
+
+  const board = document.getElementById("gameBoard");
+  const moveText = document.getElementById("moves");
+
+  function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  function createBoard() {
+    board.innerHTML = "";
+    shuffle(cards).forEach(icon => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.dataset.icon = icon;
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">?</div>
+          <div class="card-back">${icon}</div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => flipCard(card));
+      board.appendChild(card);
+    });
+  }
+
+  function flipCard(card) {
+    if (lockBoard || card === firstCard || card.classList.contains("matched")) return;
+
+    card.classList.add("flip");
+
+    if (!firstCard) {
+      firstCard = card;
+      return;
+    }
+
+    secondCard = card;
+    moves++;
+    moveText.textContent = moves;
+
+    checkMatch();
+  }
+
+  function checkMatch() {
+    const isMatch = firstCard.dataset.icon === secondCard.dataset.icon;
+
+    if (isMatch) {
+      firstCard.classList.add("matched");
+      secondCard.classList.add("matched");
+      matchedPairs++;
+      resetTurn();
+
+      if (matchedPairs === icons.length) {
+        setTimeout(() => {
+          alert(`🎉 Bạn đã thắng sau ${moves} lượt!`);
+        }, 500);
+      }
+    } else {
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.classList.remove("flip");
+        secondCard.classList.remove("flip");
+        resetTurn();
+      }, 800);
+    }
+  }
+
+  function resetTurn() {
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+  }
+
+  function resetGame() {
+    moves = 0;
+    matchedPairs = 0;
+    moveText.textContent = moves;
+    resetTurn();
+    createBoard();
+  }
+
+  createBoard();
+</script>
+
+</body>
+</html>
